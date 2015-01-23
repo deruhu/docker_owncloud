@@ -13,7 +13,7 @@ else
     sed -i "s#-x-replace-key-x-#$SSL_KEY#" /root/nginx_ssl.conf
     cp /root/nginx_ssl.conf /etc/nginx/nginx.conf
 fi
-chown -R www-data:www-data /var/www/owncloud /owncloud
+chown -R www-data:www-data /var/www/owncloud
 echo "Starting server..\n"
 
 tail -F /var/log/nginx/*.log /var/log/cron/owncloud.log &
