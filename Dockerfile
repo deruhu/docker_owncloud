@@ -23,6 +23,8 @@ ADD         cron.conf /etc/oc-cron.conf
 RUN         crontab /etc/oc-cron.conf
 
 ADD         extensions.sh extensions.conf /var/www/owncloud/apps/
+ADD         .user.ini /var/www/owncloud/
+
 RUN         chmod a+x /var/www/owncloud/apps/extensions.sh ; \
             /var/www/owncloud/apps/extensions.sh /var/www/owncloud/apps/extensions.conf /var/www/owncloud/apps ; \
             rm /var/www/owncloud/apps/extensions.sh /var/www/owncloud/apps/extensions.conf
