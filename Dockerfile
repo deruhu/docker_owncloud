@@ -28,33 +28,27 @@ RUN DEBIAN_FRONTEND=noninteractive ;\
         wget
 
 ## Check latest version: https://owncloud.org/install/#instructions-server
-ENV OWNCLOUD_VERSION 8.1.3
-ENV OWNCLOUD_IN_ROOTPATH 0
-ENV OWNCLOUD_SERVERNAME localhost
+ENV OWNCLOUD_VERSION="8.2.2" \
+    OWNCLOUD_IN_ROOTPATH="0" \
+    OWNCLOUD_SERVERNAME="localhost"
 
 LABEL com.github.jchaney.owncloud.version="$OWNCLOUD_VERSION" \
       com.github.jchaney.owncloud.license="AGPL-3.0" \
       com.github.jchaney.owncloud.url="https://github.com/jchaney/owncloud"
 
-ADD misc/bootstrap.sh misc/occ misc/oc-install-3party-apps /usr/local/bin/
-ADD configs/3party_apps.conf configs/owncloud_config.php configs/nginx_ssl.conf configs/nginx.conf /root/
+RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys E3036906AD9F30807351FAC32D5D5E97F6978A26
 
-## Could be used: https://github.com/docker-library/owncloud/blob/master/8.1/Dockerfile
-## RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys E3036906AD9F30807351FAC32D5D5E97F6978A26
-
-## For testing:
-# COPY owncloud-${OWNCLOUD_VERSION}.tar.bz2 /tmp/oc.tar.bz2
-
-ADD https://download.owncloud.org/community/owncloud-${OWNCLOUD_VERSION}.tar.bz2 /tmp/oc.tar.bz2
-ADD https://download.owncloud.org/community/owncloud-${OWNCLOUD_VERSION}.tar.bz2.asc /tmp/oc.tar.bz2.asc
-ADD misc/owncloud.asc /tmp/owncloud.asc
+RUN wget --no-verbose --output-document /tmp/oc.tar.bz2 https://download.owncloud.org/community/owncloud-${OWNCLOUD_VERSION}.tar.bz2 && \
+    wget --no-verbose --output-document /tmp/oc.tar.bz2.asc https://download.owncloud.org/community/owncloud-${OWNCLOUD_VERSION}.tar.bz2.asc
 RUN mkdir --parent /var/www/owncloud/apps_persistent /owncloud /var/log/cron && \
-    gpg --import /tmp/owncloud.asc && \
     gpg --verify /tmp/oc.tar.bz2.asc && \
-    tar -C /var/www/ -xf /tmp/oc.tar.bz2 && \
-    chown -R www-data:www-data /var/www/owncloud && \
+    tar --no-same-owner --directory /var/www/ --extract --file /tmp/oc.tar.bz2 && \
     ln --symbolic --force /owncloud/config.php /var/www/owncloud/config/config.php && \
-    rm /tmp/oc.tar.bz2 /tmp/oc.tar.bz2.asc /tmp/owncloud.asc
+    ln --symbolic --force /owncloud/docker_image_owncloud.config.php /var/www/owncloud/config/docker_image_owncloud.config.php && \
+    rm /tmp/oc.tar.bz2 /tmp/oc.tar.bz2.asc
+
+ADD misc/bootstrap.sh misc/occ misc/oc-install-3party-apps /usr/local/bin/
+ADD configs/3party_apps.conf configs/nginx_ssl.conf configs/nginx.conf configs/docker_image_owncloud.config.php configs/owncloud_autoconfig.php /root/
 
 ## Fixes: PHP is configured to populate raw post data. Since PHP 5.6 this will lead to PHP throwing notices for perfectly valid code. #19
 RUN echo 'always_populate_raw_post_data = -1' | tee --append /etc/php5/cli/php.ini /etc/php5/fpm/php.ini
@@ -69,7 +63,6 @@ RUN echo 'env[PATH] = /usr/local/bin:/usr/bin:/bin' >> /etc/php5/fpm/pool.d/www.
 ADD configs/cron.conf /etc/oc-cron.conf
 RUN crontab /etc/oc-cron.conf
 
-EXPOSE 80
-EXPOSE 443
+EXPOSE 80 443
 
-ENTRYPOINT  ["bootstrap.sh"]
+ENTRYPOINT ["bootstrap.sh"]

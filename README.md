@@ -1,5 +1,10 @@
 # docker-owncloud
 
+[![Docker Stars](https://img.shields.io/docker/stars/jchaney/owncloud.svg)][this.project_docker_hub_url]
+[![Docker Pulls](https://img.shields.io/docker/pulls/jchaney/owncloud.svg)][this.project_docker_hub_url]
+[![ImageLayers Size](https://img.shields.io/imagelayers/image-size/jchaney/owncloud/latest.svg)][this.project_docker_hub_url]
+[![ImageLayers Layers](https://img.shields.io/imagelayers/layers/jchaney/owncloud/latest.svg)][this.project_docker_hub_url]
+
 Docker image for [ownCloud][] with security in mind.
 
 The build instructions are tracked on [GitHub][this.project_github_url].
@@ -15,6 +20,7 @@ Automated builds are hosted on [Docker Hub][this.project_docker_hub_url].
 * Installs the ownCloud tarball directly from https://owncloud.org/ and it [securely](https://github.com/jchaney/owncloud/pull/12) verifies the GPG signature.
 * Makes installing of 3party apps easy and keeps them across updates.
 * The [`occ`][occ] command can be used just by typing `docker exec -ti $owncloud_container_name occ`.
+* ownCloud can only be updated by redeploying the container. No update via the web interface is possible. The ownCloud installation is fully contained in the container and not made persistent. This allows to make the ownCloud installation write protected for the Webserver and PHP which run as `www-data`.
 
 ## Getting the image
 
@@ -54,16 +60,63 @@ make owncloud-mariadb-get-pw
 
 That should be it :smile:
 
-## Installing 3party apps
+## Update your container and ownCloud
 
-Just write the command(s) needed to install apps in a configuration file, mount it in the container and run
+It is recommended to rebuild/pull this image on a regular basis and redeploy your ownCloud container(s) to get the latest security fixes.
+Note that ownCloud version jumps are uploaded to the `latest` tag of this image once they are tested. You might want to watch this repository to see when this happens.
+
+Once the ownCloud image is up-to-date, just run:
 
 ```Shell
-oc-install-3party-apps /owncloud/path/to/your/config /var/www/owncloud/apps_persistent
+make owncloud-production
 ```
 
-in your container.
+to update your container. If you don’t use the Makefile you will need to update the database of ownCloud via the web interface or via `occ`.
+
+## Installing 3party apps
+
+Just write the command(s) needed to install apps in a configuration file and mount it in the container.
+
+```
+--volume "/path/on/host/to/3party_apps.conf:/owncloud/3party_apps.conf:ro" \
+```
+
 Checkout the [example configuration][3party_apps.conf] and the [script][oc-install-3party-apps] which does the work for details.
+
+## docker-compose support
+
+You can also run this image with `docker-compose`. First you need to declare all env variables since `docker-compose` does not support (yet) default variables.
+
+```sh
+# Where to store data and database ?
+export docker_owncloud_permanent_storage="~/owncloud_data"
+
+# SSL Certificates to use.
+export docker_owncloud_ssl_cert="../certs/cloud.cert"
+export docker_owncloud_ssl_key="../certs/cloud.key"
+
+# Servername
+export docker_owncloud_servername="localhost"
+
+export docker_owncloud_http_port="80"
+export docker_owncloud_https_port="443"
+export docker_owncloud_in_root_path="1"
+
+export docker_owncloud_mariadb_root_password=$(pwgen --secure 40 1)
+export docker_owncloud_mariadb_user_password=$(pwgen --secure 40 1)
+
+export image_owncloud="jchaney/owncloud"
+export image_mariadb="mysql"
+
+```
+
+Then :
+
+```sh
+docker-compose up
+```
+
+That's all !
 
 ## Related projects
 
@@ -74,6 +127,21 @@ Checkout the [example configuration][3party_apps.conf] and the [script][oc-insta
 * [l3iggs/owncloud](https://hub.docker.com/r/l3iggs/owncloud/)
 
   Uses Apache as webserver and is based on a self build LAMP stack based on Arch Linux.
+
+* [Ansible role to install and manage ownCloud instances](https://github.com/debops/ansible-owncloud)
+
+  Automation framework for setting up ownCloud on any Debian based system. This offers much
+  more flexibility and is not limited to Docker. So you can setup a ownCloud
+  instance in a KVM virtual machine and/or a LXC container for example.
+
+  This role is part of the [DebOps](http://debops.org/) project which allows
+  you to automate all the steps mentioned above (setting up a Hypervisor host with
+  support for KVM and/or LXC, setting up the virtual machine/container and
+  installing Webserver/PHP/Database and finally ownCloud).
+
+  The real fun with this approach begins when you manage multiple instances
+  because Ansible and this role allow you to run actions like ownCloud updates
+  or enabling apps or the like on all your instances automatically.
 
 ## Maintainer
 
@@ -109,5 +177,5 @@ This project is distributed under [GNU Affero General Public License, Version 3]
 [3party_apps.conf]: https://github.com/jchaney/owncloud/blob/master/configs/3party_apps.conf
 [oc-install-3party-apps]: https://github.com/jchaney/owncloud/blob/master/misc/oc-install-3party-apps
 [AGPLv3]: https://github.com/jchaney/owncloud/blob/master/LICENSE
-[this.project_docker_hub_url]: https://registry.hub.docker.com/u/jchaney/owncloud/
+[this.project_docker_hub_url]: https://hub.docker.com/r/jchaney/owncloud/
 [this.project_github_url]: https://github.com/jchaney/owncloud
