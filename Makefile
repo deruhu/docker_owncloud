@@ -8,7 +8,8 @@ docker_owncloud_in_root_path ?= 1
 docker_owncloud_permanent_storage ?= /tmp/owncloud
 docker_owncloud_ssl_cert ?= /etc/ssl/certs/ssl-cert-snakeoil.pem
 docker_owncloud_ssl_key  ?= /etc/ssl/private/ssl-cert-snakeoil.key
-docker_owncloud_servername ?= localhost
+docker_owncloud_servername ?= cloud.auv-tomkyle.de
+docker_owncloud_name ?= owncloud2
 
 docker_owncloud_mariadb_user ?= owncloud-production
 
@@ -75,16 +76,13 @@ owncloud-https:
 owncloud-production: owncloud-mariadb
 	-@docker rm --force "$@"
 	docker run --detach \
-		--name "$@" \
+		--name "$(docker_owncloud_name)" \
 		$(DOCKER_RUN_OPTIONS) \
 		--link owncloud-mariadb:db \
 		--publish $(docker_owncloud_http_port):80 \
 		--publish $(docker_owncloud_https_port):443 \
-		--volume "$(docker_owncloud_permanent_storage)/data:/var/www/owncloud/data" \
-		--volume "$(docker_owncloud_permanent_storage)/additional_apps:/var/www/owncloud/apps_persistent" \
-		--volume "$(docker_owncloud_permanent_storage)/config:/owncloud" \
-		--volume "$(docker_owncloud_ssl_cert):$(docker_owncloud_ssl_cert):ro" \
-		--volume "$(docker_owncloud_ssl_key):$(docker_owncloud_ssl_key):ro" \
+		--volumes-from owncloud_data \
+		--volumes-from owncloud_config_data \
 		--env "OWNCLOUD_IN_ROOTPATH=$(docker_owncloud_in_root_path)" \
 		--env "OWNCLOUD_SERVERNAME=$(docker_owncloud_servername)" \
 		--env "SSL_CERT=$(docker_owncloud_ssl_cert)" \
@@ -93,7 +91,15 @@ owncloud-production: owncloud-mariadb
 		--env "DB_ENV_MYSQL_PASSWORD=overwrite" \
 		--env "DB_ENV_MYSQL_DATABASE=overwrite" \
 		--env "DB_ENV_MYSQL_ROOT_PASSWORD=overwrite" \
+		-e VIRTUAL_HOST=cloud.auv-tomkyle.de \
+		-e VIRTUAL_PORT=80 \
+		-e CERT_NAME=fullchain1 \
 		$(image_owncloud)
+		#--volume "$(docker_owncloud_permanent_storage)/data:/var/www/owncloud/data" \
+		#--volume "$(docker_owncloud_permanent_storage)/additional_apps:/var/www/owncloud/apps_persistent" \
+		#--volume "$(docker_owncloud_permanent_storage)/config:/owncloud" \
+		#--volume "$(docker_owncloud_ssl_cert):$(docker_owncloud_ssl_cert):ro" \
+		#--volume "$(docker_owncloud_ssl_key):$(docker_owncloud_ssl_key):ro" \
 
 owncloud-mariadb:
 	-@docker rm --force "$@"
