@@ -79,8 +79,6 @@ owncloud-production: owncloud-mariadb
 		--name "$(docker_owncloud_name)" \
 		$(DOCKER_RUN_OPTIONS) \
 		--link owncloud-mariadb:db \
-		--publish $(docker_owncloud_http_port):80 \
-		--publish $(docker_owncloud_https_port):443 \
 		--volumes-from owncloud_data \
 		--volumes-from owncloud_config_data \
 		--env "OWNCLOUD_IN_ROOTPATH=$(docker_owncloud_in_root_path)" \
@@ -91,10 +89,12 @@ owncloud-production: owncloud-mariadb
 		--env "DB_ENV_MYSQL_PASSWORD=overwrite" \
 		--env "DB_ENV_MYSQL_DATABASE=overwrite" \
 		--env "DB_ENV_MYSQL_ROOT_PASSWORD=overwrite" \
-		-e VIRTUAL_HOST=cloud.auv-tomkyle.de \
-		-e VIRTUAL_PORT=80 \
-		-e CERT_NAME=fullchain1 \
+		-e "VIRTUAL_HOST=cloud.auv-tomkyle.de" \
+		-e "VIRTUAL_PORT=80" \
+		-e "CERT_NAME=fullchain1" \
 		$(image_owncloud)
+		#--publish $(docker_owncloud_http_port):80 \
+		#--publish $(docker_owncloud_https_port):443 \
 		#--volume "$(docker_owncloud_permanent_storage)/data:/var/www/owncloud/data" \
 		#--volume "$(docker_owncloud_permanent_storage)/additional_apps:/var/www/owncloud/apps_persistent" \
 		#--volume "$(docker_owncloud_permanent_storage)/config:/owncloud" \
@@ -106,7 +106,7 @@ owncloud-mariadb:
 	docker run --detach \
 		--name "$@" \
 		$(DOCKER_RUN_OPTIONS) \
-		--volumes-from owncloud_mysql_data
+		--volumes-from owncloud_mysql_data \
 		--env "MYSQL_ROOT_PASSWORD=$(shell pwgen --secure 40 1)" \
 		--env "MYSQL_USER=$(docker_owncloud_mariadb_user)" \
 		--env "MYSQL_DATABASE=$(docker_owncloud_mariadb_user)" \
