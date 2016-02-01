@@ -79,8 +79,9 @@ owncloud-production: owncloud-mariadb
 		--name "$(docker_owncloud_name)" \
 		$(DOCKER_RUN_OPTIONS) \
 		--link owncloud-mariadb:db \
-		--volumes-from owncloud_data \
-		--volumes-from owncloud_config_data \
+		--volume "$(docker_owncloud_permanent_storage)/data:/var/www/owncloud/data" \
+		--volume "$(docker_owncloud_permanent_storage)/additional_apps:/var/www/owncloud/apps_persistent" \
+		--volume "$(docker_owncloud_permanent_storage)/config:/owncloud" \
 		--env "OWNCLOUD_IN_ROOTPATH=$(docker_owncloud_in_root_path)" \
 		--env "OWNCLOUD_SERVERNAME=$(docker_owncloud_servername)" \
 		--env "SSL_CERT=$(docker_owncloud_ssl_cert)" \
@@ -95,11 +96,10 @@ owncloud-production: owncloud-mariadb
 		$(image_owncloud)
 		#--publish $(docker_owncloud_http_port):80 \
 		#--publish $(docker_owncloud_https_port):443 \
-		#--volume "$(docker_owncloud_permanent_storage)/data:/var/www/owncloud/data" \
-		#--volume "$(docker_owncloud_permanent_storage)/additional_apps:/var/www/owncloud/apps_persistent" \
-		#--volume "$(docker_owncloud_permanent_storage)/config:/owncloud" \
 		#--volume "$(docker_owncloud_ssl_cert):$(docker_owncloud_ssl_cert):ro" \
 		#--volume "$(docker_owncloud_ssl_key):$(docker_owncloud_ssl_key):ro" \
+		#		--volumes-from owncloud_data \
+		#		--volumes-from owncloud_config_data \
 
 owncloud-mariadb:
 	-@docker rm --force "$@"
