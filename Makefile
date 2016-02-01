@@ -74,7 +74,7 @@ owncloud-https:
 		$(image_owncloud)
 
 owncloud-production: owncloud-mariadb
-	-@docker rm --force "$@"
+	-@docker rm --force "$(docker_owncloud_name)"
 	docker run --detach \
 		--name "$(docker_owncloud_name)" \
 		$(DOCKER_RUN_OPTIONS) \
