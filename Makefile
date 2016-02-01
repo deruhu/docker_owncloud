@@ -6,8 +6,8 @@ docker_owncloud_http_port    ?= 80
 docker_owncloud_https_port   ?= 443
 docker_owncloud_in_root_path ?= 1
 docker_owncloud_permanent_storage ?= /tmp/owncloud
-docker_owncloud_ssl_cert ?= /etc/ssl/certs/ssl-cert-snakeoil.pem
-docker_owncloud_ssl_key  ?= /etc/ssl/private/ssl-cert-snakeoil.key
+docker_owncloud_ssl_cert ?= /ssl/fullchain1.crt
+docker_owncloud_ssl_key  ?= /ssl/fullchain1.key
 docker_owncloud_servername ?= cloud.auv-tomkyle.de
 docker_owncloud_name ?= owncloud2
 
@@ -106,12 +106,13 @@ owncloud-mariadb:
 	docker run --detach \
 		--name "$@" \
 		$(DOCKER_RUN_OPTIONS) \
-		--volume $(docker_owncloud_permanent_storage)/db:/var/lib/mysql \
+		--volumes-from owncloud_mysql_data
 		--env "MYSQL_ROOT_PASSWORD=$(shell pwgen --secure 40 1)" \
 		--env "MYSQL_USER=$(docker_owncloud_mariadb_user)" \
 		--env "MYSQL_DATABASE=$(docker_owncloud_mariadb_user)" \
 		--env "MYSQL_PASSWORD=$(shell pwgen --secure 40 1)" \
 		$(image_mariadb)
+		#--volume $(docker_owncloud_permanent_storage)/db:/var/lib/mysql \
 
 owncloud-mariadb-get-pw:
 	docker exec owncloud-mariadb \
