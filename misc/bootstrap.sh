@@ -26,7 +26,7 @@ then
     cp /root/nginx.conf /etc/nginx/nginx.conf
 else
     echo "Copying nginx.conf with SSL support …"
-    #sed "s#-x-replace-cert-x-#$SSL_CERT#;s#-x-replace-key-x-#$SSL_KEY#;s#-x-server-name-x-#$OWNCLOUD_SERVERNAME#" /root/nginx_ssl.conf > /etc/nginx/nginx.conf
+    sed "s#-x-replace-cert-x-#$SSL_CERT#;s#-x-replace-key-x-#$SSL_KEY#;s#-x-server-name-x-#$OWNCLOUD_SERVERNAME#" /root/nginx_ssl.conf > /etc/nginx/nginx.conf
 fi
 
 if [ "${OWNCLOUD_IN_ROOTPATH}" = "1" ]
